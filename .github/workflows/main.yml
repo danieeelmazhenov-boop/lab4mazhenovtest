@@ -2,16 +2,20 @@ name: Load Test
 
 on:
   push:
-    branches: [ main, master ]
-  pull_request:
-    branches: [ main, master ]
+    branches: [ "main" ]
 
 jobs:
   load_test:
     runs-on: ubuntu-latest
 
+    # Задаем рабочую папку для ВСЕХ шагов внутри этого job
+    defaults:
+      run:
+        working-directory: lab4mazhenovtest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -22,16 +26,8 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run Flask app
-        run: |
-          python app.py &
-          sleep 5
+        run: python app.py &
 
       - name: Run locust load test
         run: |
-          locust -f locustfile.py --headless -u 50 -r 10 --run-time 1m --host=http://127.0.0.1:5000 --csv=load_report
-
-      - name: Upload report
-        uses: actions/upload-artifact@v4
-        with:
-          name: locust-report
-          path: load_report_*.csv
+          locust -f locustfile.py --headless -u 10 -r 2 --run-time 30s --html report.html
